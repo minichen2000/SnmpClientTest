@@ -1,7 +1,9 @@
 package com.test.snmpclient;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.snmp4j.CommunityTarget;
 import org.snmp4j.PDU;
@@ -11,11 +13,7 @@ import org.snmp4j.TransportMapping;
 import org.snmp4j.event.ResponseEvent;
 import org.snmp4j.event.ResponseListener;
 import org.snmp4j.mp.SnmpConstants;
-import org.snmp4j.smi.Address;
-import org.snmp4j.smi.GenericAddress;
-import org.snmp4j.smi.OID;
-import org.snmp4j.smi.OctetString;
-import org.snmp4j.smi.VariableBinding;
+import org.snmp4j.smi.*;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.snmp4j.util.DefaultPDUFactory;
 import org.snmp4j.util.TableEvent;
@@ -60,7 +58,13 @@ public class SimpleSnmpClient {
 
     public String getAsString(OID oid) throws IOException {
         ResponseEvent event = get(new OID[]{oid});
-        return event.getResponse().get(0).getVariable().toString();
+        PDU pdu=event.getResponse();
+        if(null!=pdu){
+            System.out.println(pdu.toString());
+            return pdu.get(0).getVariable().toString();
+        }else{
+            return null;
+        }
     }
 
 
@@ -110,7 +114,6 @@ public class SimpleSnmpClient {
 
         @SuppressWarnings("unchecked")
         List<TableEvent> events = tUtils.getTable(getTarget(), oids, null, null);
-
         List<List<String>> list = new ArrayList<List<String>>();
         for (TableEvent event : events) {
             if(event.isError()) {
@@ -124,18 +127,39 @@ public class SimpleSnmpClient {
         }
         return list;
     }
+    public List<List<VariableBinding>> getTable(OID[] oids) {
+        TableUtils tUtils = new TableUtils(snmp, new DefaultPDUFactory(PDU.GETBULK));
+
+        @SuppressWarnings("unchecked")
+        List<TableEvent> events = tUtils.getTable(getTarget(), oids, null, null);
+
+        List<List<VariableBinding>> list = new ArrayList<List<VariableBinding>>();
+        for (TableEvent event : events) {
+            if(event.isError()) {
+                throw new RuntimeException(event.getErrorMessage());
+            }
+            List<VariableBinding> row = new ArrayList<VariableBinding>();
+            for(VariableBinding vb: event.getColumns()) {
+                row.add(vb);
+            }
+            list.add(row);
+        }
+        return list;
+    }
 
     public static String extractSingleString(ResponseEvent event) {
         return event.getResponse().get(0).getVariable().toString();
     }
 
-    public static void printList(List<String> l){
-        for(String s : l){
-            System.out.println(s);
+    public static void printList(List<VariableBinding> l){
+        for(VariableBinding vb : l){
+            String att="";
+            if(null!=vb) att=vb.toString();
+            System.out.println(att);
         }
     }
-    public static void printListList(List<List<String>> l){
-        for(List<String> s : l){
+    public static void printListList(List<List<VariableBinding>> l){
+        for(List<VariableBinding> s : l){
             printList(s);
             System.out.println("-------------------------------------------------");
         }

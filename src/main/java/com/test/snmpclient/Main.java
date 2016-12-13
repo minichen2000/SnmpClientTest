@@ -16,12 +16,12 @@ public class Main {
             System.out.println(client.getAsString(new OID("1.3.6.1.2.1.1.1.0")));
 
             System.out.println("\n//GETBULK-Table");
-            SimpleSnmpClient.printListList(client.getTableAsStrings(
+            SimpleSnmpClient.printListList(client.getTable(
                     new OID[] {
-                            //new OID("1.3.6.1.2.1.1.1"),
-                            //new OID("1.3.6.1.2.1.1.5")
+                            //new OID("1.3.6.1.2.1.2.2"),
                             new OID("1.3.6.1.2.1.2.2.1.2"),
-                            new OID("1.3.6.1.2.1.2.2.1.3")
+                            new OID("1.3.6.1.2.1.2.2.1.3"),
+                            //new OID("1.3.6.1.2.1.3.1.1.2")
                     })
             );
         } catch (IOException e) {
